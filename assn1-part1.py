@@ -1,3 +1,9 @@
+import sys
+from Bio import SeqIO
+
+# Specify the path to your FASTA file
+fasta_file_path = "path/to/your/file.fasta"
+
 def align(seq1, seq2, match_score=1, mismatch_score=-1, gap_penalty=-1):
     # Initialize the scoring matrix
     len_seq1 = len(seq1) - 1
@@ -47,7 +53,7 @@ def align(seq1, seq2, match_score=1, mismatch_score=-1, gap_penalty=-1):
     align1 = ""
     align2 = ""
     i, j = len_seq1, max_position
-    print(score_matrix)
+    # print(score_matrix)
     
 
     while i >= 0:
@@ -55,21 +61,21 @@ def align(seq1, seq2, match_score=1, mismatch_score=-1, gap_penalty=-1):
         diagonal_score = score_matrix[i - 1][j - 1] if i > 0 and j > 0 else float('-inf')
         up_score = score_matrix[i][j - 1] if j > 0 else float('-inf')
         left_score = score_matrix[i - 1][j] if i > 0 else float('-inf')
-        print([i,j] + [seq1[i], seq2[j]])
+        # print([i,j] + [seq1[i], seq2[j]])
 
         if current_score == diagonal_score + (match_score if seq1[i] == seq2[j] else mismatch_score):
-            print("diagonal")
+            # print("diagonal")
             align1 = seq1[i] + align1
             align2 = seq2[j] + align2
             i -= 1
             j -= 1
         elif current_score == left_score + gap_penalty:
-            print("left")
+            # print("left")
             align1 = seq1[i] + align1
             align2 = "-" + align2
             i -= 1
         elif current_score == up_score + gap_penalty:
-            print("up")
+            # print("up")
             align1 = "-" + align1
             align2 = seq2[j] + align2
             j -= 1
@@ -78,29 +84,14 @@ def align(seq1, seq2, match_score=1, mismatch_score=-1, gap_penalty=-1):
             align2 = seq2[j] + align2
             break
 
-    return align1, align2, score_matrix[len_seq1][max_position]
+    return str(score_matrix[len_seq1][max_position]), align1, align2
 
-# Example usage:
-# sequence1 = "AAAA"
-# sequence2 = "GGGGGGGGGGGG"
-# sequence1 = "ACT"
-# sequence2 = "CT"
-# sequence1 = "AACCCCTAG"
-# sequence2 = "TTAATCCCCAGGGTCGTTT"
-# sequence1 = "ACCGTT"
-# sequence2 = "ACGTAACCTTT"
-# sequence1 = "ACCGTTACCGTT"
-# sequence2 = "ACGTAACCTTT"
-# sequence1 = "ACCGTTACCGTTACCGTT"
-# sequence2 = "ACGTAACCTTT"
-# sequence1 = "AAAAAAAACT"
-# sequence2 = "CT"
-# sequence1 = "ATGGGGGGG"
-# sequence2 = "AT"
-sequence1 = "ATGGGGGGG"
-sequence2 = "TG"
-alignment_result = align(sequence1, sequence2)
+# Running the program
+sequences = []
+with open(sys.argv[2], "r") as handle:
+    for record in SeqIO.parse(handle, "fasta"):
+        sequences.append(str(record.seq))
 
-print(alignment_result[2])
-print(alignment_result[0])
-print(alignment_result[1])
+with open(sys.argv[4], 'w') as file:
+    for item in align(sequences[0], sequences[1]):
+        file.write(item + "\n")
