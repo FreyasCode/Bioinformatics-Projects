@@ -1,9 +1,6 @@
 import sys
 from Bio import SeqIO
 
-# Specify the path to your FASTA file
-fasta_file_path = "path/to/your/file.fasta"
-
 def align(seq1, seq2, match_score=1, mismatch_score=-1, gap_penalty=-1):
     # Initialize the scoring matrix
     len_seq1 = len(seq1) - 1
