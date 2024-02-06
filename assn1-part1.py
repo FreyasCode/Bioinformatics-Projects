@@ -60,13 +60,7 @@ def align(seq1, seq2, match_score=1, mismatch_score=-1, gap_penalty=-1):
         left_score = score_matrix[i - 1][j] if i > 0 else float('-inf')
         # print([i,j] + [seq1[i], seq2[j]])
 
-        if current_score == diagonal_score + (match_score if seq1[i] == seq2[j] else mismatch_score):
-            # print("diagonal")
-            align1 = seq1[i] + align1
-            align2 = seq2[j] + align2
-            i -= 1
-            j -= 1
-        elif current_score == left_score + gap_penalty:
+        if current_score == left_score + gap_penalty:
             # print("left")
             align1 = seq1[i] + align1
             align2 = "-" + align2
@@ -75,6 +69,12 @@ def align(seq1, seq2, match_score=1, mismatch_score=-1, gap_penalty=-1):
             # print("up")
             align1 = "-" + align1
             align2 = seq2[j] + align2
+            j -= 1
+        elif current_score == diagonal_score + (match_score if seq1[i] == seq2[j] else mismatch_score):
+            # print("diagonal")
+            align1 = seq1[i] + align1
+            align2 = seq2[j] + align2
+            i -= 1
             j -= 1
         else:
             align1 = seq1[i] + align1
