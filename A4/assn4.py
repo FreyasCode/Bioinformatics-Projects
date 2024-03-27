@@ -1,6 +1,7 @@
 from pyteomics import mgf, mass
 import numpy as np
 import sys
+import math
 
 # calculate spectrum mass (not m/z)
 def calculate_spectrum_mass(pepmass, charge):
@@ -41,82 +42,77 @@ def read_peptides(filepath):
 def generate_theoretical_spectrum(peptide):
     ions = []
     for i in range(1, len(peptide)):
-        b_ion = mass.fast_mass(peptide[:i], ion_type='b')
-        y_ion = mass.fast_mass(peptide[i:], ion_type='y')
-        ions.extend([b_ion, y_ion])
-    return np.array(sorted(ions))
+        for charge in range(1, 3): 
+            b_ion = mass.fast_mass(peptide[:i], ion_type='b', charge=charge)
+            y_ion = mass.fast_mass(peptide[i:], ion_type='y', charge=charge) # TODO: check charge
+            ions.extend([b_ion, y_ion])
+    return np.array(ions)
+
+def discretize_spectrum(mz_array, intensities, min_mz, max_mz, bin_width):
+    num_bins = int(np.ceil((max_mz - min_mz) / bin_width))
+    discrete_spectrum = np.zeros(num_bins)
+
+    for i in range(len(mz_array)):
+        bin_index = int((mz_array[i] - min_mz) / bin_width)
+        if intensities is not None: 
+            discrete_spectrum[bin_index] += math.sqrt(intensities[i]) # TODO: sqrt(intensities[i])
+        else:
+            discrete_spectrum[bin_index] += 1
+
+    return discrete_spectrum
 
 def cosine_similarity(v1, v2):
-    dot_product = np.dot(v1, v2)
     norm_v1 = np.linalg.norm(v1)
     norm_v2 = np.linalg.norm(v2)
-    return dot_product / (norm_v1 * norm_v2) if norm_v1 and norm_v2 else 0
+    return np.dot(v1 / norm_v1, v2 / norm_v2) if norm_v1 and norm_v2 else 0
 
 # check if mass difference is within tolerance
 # if yes, evaluate score
-def score_peptide_spectrum_match_intensity(peptide, spectrum):
-    theoretical_spectrum = generate_theoretical_spectrum(peptide)
+def score_peptide_spectrum_match_intensity(peptide, spectrum, min_mz, max_mz, bin_size=0.5): # TODO: best value
+    undiscretized_theoretical_spectrum = generate_theoretical_spectrum(peptide)
+    theoretical_spectrum_vector = discretize_spectrum(undiscretized_theoretical_spectrum, None, min_mz, max_mz, bin_size)
+    
     actual_spectrum_mz = np.array(spectrum['m/z array'])
     actual_spectrum_intensities = np.array(spectrum['intensity array'])
-    
-    # Initialize a vector for the actual spectrum based on theoretical spectrum size
-    actual_spectrum_vector = np.zeros_like(theoretical_spectrum)
-    tolerance = 0.5  # Mass tolerance for matching peaks
-    
-    # Assign intensities to the actual spectrum vector based on matching m/z values
-    for mz, intensity in zip(actual_spectrum_mz, actual_spectrum_intensities):
-        diff = np.abs(theoretical_spectrum - mz)
-        closest_index = np.argmin(diff)
-        if diff[closest_index] <= tolerance:
-            actual_spectrum_vector[closest_index] += intensity  # Sum intensities for simplicity
-    
-    # Normalize vectors to have a unit norm before calculating cosine similarity
+    actual_spectrum_vector = discretize_spectrum(actual_spectrum_mz, actual_spectrum_intensities, min_mz, max_mz, bin_size)
+
     norm_actual_vector = actual_spectrum_vector / np.linalg.norm(actual_spectrum_vector) if np.linalg.norm(actual_spectrum_vector) else actual_spectrum_vector
-    theoretical_spectrum_vector = np.ones_like(theoretical_spectrum)  # Assume uniform intensity for theoretical peaks
     norm_theoretical_vector = theoretical_spectrum_vector / np.linalg.norm(theoretical_spectrum_vector)
-    
-    # Calculate cosine similarity with intensity information
+
     score = cosine_similarity(norm_theoretical_vector, norm_actual_vector)
     return score
 
 
-def match_spectrum_to_peptides(spectrum, peptides):
+def match_spectrum_to_peptides(spectrum, peptides, min_mz, max_mz):
     best_match = None
-    best_score = -1  # Initialize with a score that any match will exceed
+    best_score = -1
 
     spectrum_pepmass = spectrum['params']['pepmass'][0]
     spectrum_charge = spectrum['params']['charge'][0]
     spectrum_mass = calculate_spectrum_mass(spectrum_pepmass, spectrum_charge)
     
     for peptide in peptides:
-        if abs(spectrum_mass - peptides[peptide]) < 0.1:
-            score = score_peptide_spectrum_match_intensity(peptide, spectrum)
+        if abs(spectrum_mass - peptides[peptide]) < 0.1: # optimization
+            score = score_peptide_spectrum_match_intensity(peptide, spectrum, min_mz, max_mz)
             if score > best_score:
                 best_score = score
                 best_match = peptide
                 
     return best_match, best_score
 
-def calculate_fdr(matches):
+def calculate_fdr(matches, target_peptides):
     total_decoys = 0
     total_targets = 0
     largest_n = 0
     
     for i, match in enumerate(matches):
-        if match[-1] == 'decoy':
-            total_decoys += 1
-        else:
+        if match[-1] in target_peptides:
             total_targets += 1
-        
-        # Calculate FDR up to the current position
-        if total_targets > 0:
-            current_fdr = total_decoys / (total_targets + total_decoys)
         else:
-            current_fdr = 0
-        
-        # Check if current FDR is within the acceptable limit (<= 1%)
-        if current_fdr <= 0.01:
-            largest_n = i + 1  # Adjust for 0-based indexing
+            total_decoys += 1
+            
+        if total_decoys / total_targets <= 0.01:
+            largest_n = i + 1 
     
     return largest_n
 
@@ -126,7 +122,6 @@ def main():
     decoy = sys.argv[6]
     output = sys.argv[8]
     
-    # spectra = parse_mgf("./test1.mgf")
     target_peptides = read_peptides(target)
     decoy_peptides = read_peptides(decoy)
     all_peptides = {**target_peptides, **decoy_peptides}
@@ -134,10 +129,14 @@ def main():
     # print(f"Number of decoy peptides: {len(decoy_peptides)}")
 
     matches = []
-    with mgf.read(spectra) as spectra:
+    with mgf.read(spectra) as result:
+        spectra = list(result)
+        global_min_mz = min([min(spectrum['m/z array']) for spectrum in spectra])
+        global_max_mz = max([max(spectrum['m/z array']) for spectrum in spectra])
+        
         print(f"Number of spectra: {len(spectra)}")
         for i, spectrum in enumerate(spectra):
-            match, score = match_spectrum_to_peptides(spectrum, all_peptides)
+            match, score = match_spectrum_to_peptides(spectrum, all_peptides, global_min_mz, global_max_mz)
             if match:
                 matches.append((i, spectrum['params']['pepmass'][0], spectrum['params']['charge'][0], score, match))
     
@@ -148,7 +147,7 @@ def main():
         for match in matches:
             outfile.write(f"{match[0]}\t{match[1]:.4f}\t{match[2]}\t{match[3]}\t{match[4]}\n")
 
-    n = calculate_fdr(matches)
+    n = calculate_fdr(matches, target_peptides)
     print(f"Largest n: {n}")
 
 if __name__ == "__main__":
