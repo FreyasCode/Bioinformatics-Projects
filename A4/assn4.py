@@ -42,10 +42,10 @@ def read_peptides(filepath):
 def generate_theoretical_spectrum(peptide):
     ions = []
     for i in range(1, len(peptide)):
-        for charge in range(1, 3): 
-            b_ion = mass.fast_mass(peptide[:i], ion_type='b', charge=charge)
-            y_ion = mass.fast_mass(peptide[i:], ion_type='y', charge=charge) # TODO: check charge
-            ions.extend([b_ion, y_ion])
+        # for charge in range(1, 3): # choose charge = 1
+        b_ion = mass.fast_mass(peptide[:i], ion_type='b', charge=1)
+        y_ion = mass.fast_mass(peptide[i:], ion_type='y', charge=1) # TODO: check charge
+        ions.extend([b_ion, y_ion])
     return np.array(ions)
 
 def discretize_spectrum(mz_array, intensities, min_mz, max_mz, bin_width):
