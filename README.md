@@ -1,99 +1,73 @@
 # 🧬 CS 482 – Computational Biology Projects
 
-This repository contains four major assignments completed for **CS 482: Computational Biology** at the University of Waterloo. The projects explore core methods in bioinformatics, including **sequence alignment**, **peptide classification**, **variant analysis**, and **mass spectrometry–based peptide identification**, using Python and widely used computational biology tools.
+This repository contains four major assignments completed for **CS 482: Computational Biology** at the University of Waterloo. The projects explore core topics in bioinformatics, including **sequence alignment**, **peptide classification**, **variant analysis**, and **mass spectrometry–based peptide identification**, using Python and common computational biology tools.
 
 ---
 
 ## 📁 Assignment 1: Pairwise Sequence Alignment
 
 **Goal:**  
-Align a query DNA sequence against a set of target sequences using a custom dynamic programming algorithm.
+Align a query DNA sequence against a set of target sequences using a custom **dynamic programming** algorithm.
 
-### Features:
+### 🔧 Features
 - Global alignment with customizable scoring:
   - Match = +1  
   - Mismatch = -1  
   - Gap = -1
 - Reconstructs aligned sequences via traceback
-- Parses input FASTA files using `Biopython`
-- Outputs best match and alignment score to a text file
+- Parses FASTA input using `Biopython`
+- Outputs best-scoring aligned sequence from a sequence database
+
+---
 
 ## 📁 Assignment 2: Peptide Naturalness Classification
 
 **Goal:**  
-Classify peptides as biologically "natural" or randomly shuffled using statistical scoring and optional machine learning models.
+Classify peptides as biologically “natural” or randomly shuffled using **k-mer frequency statistics** and optional **machine learning** techniques.
 
-### 🔧 Features:
-- **Score1:** Computes a log-likelihood score based on **k-mer frequency** (typically k=3) comparing natural vs. random peptide datasets.
-- **Score2:** Implements a user-defined method, optionally using **machine learning** (e.g. logistic regression with `scikit-learn`) to improve classification.
-- Uses **pseudocount smoothing** to avoid divide-by-zero and ensure robustness when k-mers are rare or unseen.
+### 🔧 Features
+- **Score1:** Computes log-likelihood based on **k-mer frequency** comparisons between natural and random datasets
+- **Score2:** Supports a custom classifier (e.g. logistic regression via `scikit-learn`)
+- Applies **pseudocount smoothing** to avoid divide-by-zero issues in rare k-mers
+- Provides interpretability through scoring breakdown
+
+---
+
 ## 📁 Assignment 3: SARS-CoV-2 Variant RBD Extraction & Alignment
 
 **Goal:**  
-Extract the **receptor-binding domain (RBD)** of the spike protein from various **SARS-CoV-2 variants** and perform a **multiple sequence alignment (MSA)** to identify and visualize mutations relative to the original Wuhan-Hu-1 strain.
-
----
-
-### 🔬 Background
-
-The spike (S) protein of SARS-CoV-2 contains a receptor-binding domain (RBD) responsible for attaching to human ACE2 receptors. Monitoring mutations in the RBD is critical for understanding variant behavior and vaccine resistance.
-
----
+Extract the **receptor-binding domain (RBD)** from the spike protein of various **SARS-CoV-2 variants** and perform a **multiple sequence alignment (MSA)** to highlight mutations relative to the original Wuhan-Hu-1 strain.
 
 ### 🔧 Features
+- Retrieves full spike sequences for:
+  - **Alpha**, **Beta**, **Gamma**, **Delta**, and **Omicron**
+- Extracts RBD regions using annotated residue positions (e.g. Wuhan-Hu-1: 330–583)
+- Performs **MSA** using Clustal Omega
+- Highlights amino acid substitutions across variants
 
-- Retrieves complete spike protein sequences for the following variants:
-  - **Alpha (B.1.1.7)**
-  - **Beta (B.1.351)**
-  - **Gamma (P.1)**
-  - **Delta (B.1.617.2)**
-  - **Omicron (B.1.1.529)**
-- Extracts the **RBD subsequence** from each variant using annotated residue ranges (e.g., Wuhan-Hu-1: positions 330–583)
-- Aligns sequences using **Clustal Omega** to compare mutations
-- Highlights differences from the reference strain (Wuhan-Hu-1)
-
----
-
-### 📄 Input/Output
-
-#### ✅ Input:
-- Variant names (used to query NCBI Protein database)
-- Full spike protein sequences in FASTA format (downloaded manually or programmatically)
-
-#### 📤 Output:
-- RBD sequences in FASTA format
-- Multiple sequence alignment (MSA) highlighting mutated residues
+### 📄 Input / Output
+- **Input:** Variant protein sequences from the NCBI Protein database (in FASTA format)
+- **Output:** Aligned RBD sequences showing mutations from the reference
 
 ---
+
 ## 📁 Assignment 4: Peptide-Spectrum Matching with Cosine Similarity
 
 **Goal:**  
-Match experimental **MS/MS spectra** to candidate peptides (target and decoy) by comparing theoretical and observed spectra using **cosine similarity**.
-
----
-
-### 🔬 Background
-
-Mass spectrometry-based proteomics relies on matching observed spectra to theoretical fragment spectra generated from candidate peptides. This assignment implements a scoring-based pipeline for identifying the best-matching peptide for each input spectrum.
-
----
+Match **MS/MS spectra** to candidate peptides using discretized theoretical spectra and **cosine similarity** scoring.
 
 ### 🔧 Features
-
-- **Reads Input Data:**
-  - MS/MS spectra from `.mgf` files
-  - Candidate peptide lists (target and decoy)
-- **Generates Theoretical Spectra:**
-  - Calculates **b- and y-ion fragment masses** for each peptide
-  - Assumes charge +1 for simplification
-- **Discretizes Spectra:**
-  - Both experimental and theoretical spectra are binned using a fixed **bin size = 0.5**
-  - Intensity-normalized vectors are created for cosine comparison
-- **Precursor Mass Filtering:**
-  - Skips comparisons if the **precursor mass difference > 0.1**, improving efficiency
-- **Scoring:**
-  - Uses **cosine similarity** between binned spectra vectors to determine best match
-- **Postprocessing:**
-  - Reports number of identifications at **1% false discovery rate (FDR)**
+- Reads spectra from `.mgf` files and peptides from target/decoy lists
+- Generates **theoretical b- and y-ion spectra**
+- Discretizes spectra with fixed **bin size = 0.5**
+- Computes **cosine similarity** between observed and theoretical spectra
+- Applies **precursor mass filtering** (tolerance ≤ 0.1) for speedup
+- Reports number of identifications at **1% FDR**
 
 ---
+
+## 🛠 Installation
+
+Install all required packages with:
+```bash
+pip install numpy scipy biopython scikit-learn
