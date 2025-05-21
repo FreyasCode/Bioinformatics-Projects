@@ -4,7 +4,7 @@ This repository contains four major assignments completed for **CS 482: Computat
 
 ---
 
-## 📁 Assignment 1: Pairwise Sequence Alignment
+## 📁 Project 1: Pairwise Sequence Alignment
 
 **Goal:**  
 Align a query DNA sequence against a set of target sequences using a custom **dynamic programming** algorithm.
@@ -20,7 +20,7 @@ Align a query DNA sequence against a set of target sequences using a custom **dy
 
 ---
 
-## 📁 Assignment 2: Peptide Naturalness Classification
+## 📁 Project 2: Peptide Naturalness Classification
 
 **Goal:**  
 Classify peptides as biologically “natural” or randomly shuffled using **k-mer frequency statistics** and optional **machine learning** techniques.
@@ -33,7 +33,7 @@ Classify peptides as biologically “natural” or randomly shuffled using **k-m
 
 ---
 
-## 📁 Assignment 3: SARS-CoV-2 Variant RBD Extraction & Alignment
+## 📁 Project 3: SARS-CoV-2 Variant RBD Extraction & Alignment
 
 **Goal:**  
 Extract the **receptor-binding domain (RBD)** from the spike protein of various **SARS-CoV-2 variants** and perform a **multiple sequence alignment (MSA)** to highlight mutations relative to the original Wuhan-Hu-1 strain.
@@ -51,7 +51,7 @@ Extract the **receptor-binding domain (RBD)** from the spike protein of various 
 
 ---
 
-## 📁 Assignment 4: Peptide-Spectrum Matching with Cosine Similarity
+## 📁 Project 4: Peptide-Spectrum Matching with Cosine Similarity
 
 **Goal:**  
 Match **MS/MS spectra** to candidate peptides using discretized theoretical spectra and **cosine similarity** scoring.
