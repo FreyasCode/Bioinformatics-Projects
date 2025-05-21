@@ -1,4 +1,4 @@
-# 🧬 CS 482 – Bioinformatics Projects
+# 🧬 Freya's Bioinformatics Projects
 
 This repository contains four major assignments completed for **CS 482: Computational Biology** at the University of Waterloo. The projects explore core topics in bioinformatics, including **sequence alignment**, **peptide classification**, **variant analysis**, and **mass spectrometry–based peptide identification**, using Python and common computational biology tools.
 
